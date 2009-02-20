@@ -5,7 +5,7 @@ class RestZeit
     @finish= Time.parse(finish)
     @start_time= Time.parse(start_time)
     @end_time= Time.parse(end_time)
-    @work_hours= ((@end_time-@start_time)%(24*60*60))/(60*60)
+    @work_hours= duration_in_hours(@end_time-@start_time)
     update
   end
   def update
@@ -24,14 +24,19 @@ class RestZeit
       stepper+= (24*60*60)
       @days += 1 if (1..5)===stepper.wday
     end
+    @days += 1 if duration_in_hours(@start_time-@now)>0
     @days
   end
   def time
     return @time unless @time.nil?
-    todays_hours= ((@end_time-@now)%(24*60*60))/(60*60)
-    last_hours= ((@finish-@start_time)%(24*60*60))/(60*60)
+    todays_hours= duration_in_hours(@end_time-@now)
+    last_hours= duration_in_hours(@finish-@start_time)
     
-    @time= ((todays_hours+last_hours)%(@work_hours))
+    if todays_hours<0 || todays_hours>@work_hours
+      @time= 0
+    else
+      @time= ((todays_hours+last_hours)%(@work_hours))
+    end
   end
   def hours
     time.floor
@@ -45,6 +50,11 @@ class RestZeit
 
   def text
     "#{days} Tage, #{sprintf("%02d",hours)}:#{sprintf("%02d",minutes)}:#{sprintf("%02d",seconds)}"
+  end
+  
+  private
+  def duration_in_hours duration
+    ((duration)%(24*60*60))/(60*60)
   end
 end
 
